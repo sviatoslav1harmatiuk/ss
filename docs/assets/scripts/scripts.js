@@ -1,102 +1,95 @@
-/*----------------------------Burger-Menu-----------------------------------*/
-const burgerMenu = document.getElementById('burgerMenu');
-const open_icon = document.getElementById('open-icon');
-const close_icon = document.getElementById('close-icon');
-const header_now = document.getElementById('header-nav');
 
-burgerMenu.addEventListener('click', () => {
-    open_icon.classList.toggle('d-none');
-    close_icon.classList.toggle('d-none');
-    header_now.classList.toggle('header-nav--open');
-});
-/*-------------------------Scroll-Animation-----------------------------------*/
 
-document.addEventListener("DOMContentLoaded", () => {
-    const elementsToScale = document.querySelectorAll('.scale-scroll');
-
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.2
-    };
-
-    const intersectionCallback = (entries, observer) => {
-        entries.forEach(entry => {
-            entry.target.classList.toggle('is-visible', entry.isIntersecting);
-        });
-    };
-    
-    const observer = new IntersectionObserver(intersectionCallback, observerOptions);
-
-    elementsToScale.forEach(element => {
-        observer.observe(element);
+// Smooth scroll + active nav highlight
+document.addEventListener("DOMContentLoaded", function () {
+  // smooth scrolling
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+  });
+
+  // active nav highlight on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.main-nav a');
+  function onScroll() {
+    const scrollPos = window.scrollY + window.innerHeight/3;
+    sections.forEach(sec => {
+      const top = sec.offsetTop;
+      const bottom = top + sec.offsetHeight;
+      const id = '#' + sec.id;
+      if (scrollPos >= top && scrollPos < bottom) {
+        navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === id));
+      }
+    });
+  }
+  window.addEventListener('scroll', onScroll);
+  onScroll();
 });
 
-/*----------------------------Modal-Window-----------------------------------*/
 
-const open_modal_window = document.getElementById('open-modal-window');
-const modal = document.getElementById('contact-modal');
-const close_modal_screen = modal.querySelector('.modal-close');
-const overlay = modal.querySelector('.modal-overlay');
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    const open_modal = (event) => {
-        event.preventDefault(); 
-        modal.classList.add('is-open');
-        document.body.style.overflow = 'hidden';
-    };
-   
-    const close_modal = () => {
-        modal.classList.remove('is-open');
-        document.body.style.overflow = ''; 
-    };
-
-    
-    if (open_modal_window && modal) {
-        open_modal_window.addEventListener('click', open_modal);
-        close_modal_screen.addEventListener('click', close_modal);
-        overlay.addEventListener('click', close_modal);        
-        window.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && modal.classList.contains('is-open')) {
-                close_modal();
-            }
-        });
+// === Mobile burger menu script ===
+document.addEventListener('DOMContentLoaded', function(){
+  var burger = document.getElementById('mobile-burger');
+  var nav = document.getElementById('mobile-nav');
+  if(!burger || !nav) return;
+  function toggleNav(){
+    var open = nav.classList.toggle('open');
+    burger.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open? 'true':'false');
+    nav.setAttribute('aria-hidden', open? 'false':'true');
+  }
+  burger.addEventListener('click', function(e){ e.stopPropagation(); toggleNav(); });
+  // close when clicking a link inside nav
+  nav.addEventListener('click', function(e){
+    if(e.target.tagName.toLowerCase() === 'a'){
+      nav.classList.remove('open');
+      burger.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+      nav.setAttribute('aria-hidden', 'true');
     }
+  });
+  // close on outside click
+  document.addEventListener('click', function(e){
+    if(!nav.contains(e.target) && !burger.contains(e.target)){
+      if(nav.classList.contains('open')){
+        nav.classList.remove('open');
+        burger.classList.remove('open');
+        burger.setAttribute('aria-expanded', 'false');
+        nav.setAttribute('aria-hidden', 'true');
+      }
+    }
+  });
 });
-/*----------------------------Sticky-Header----------------------------------*/
 
+
+// === Burger menu toggle ===
 document.addEventListener("DOMContentLoaded", () => {
-    
-    const header = document.getElementById('main-header');
-    
-    if (header) {
-        const colorStart = [255, 255, 255];
-        const colorEnd = [205, 162, 116];
-        
-        const scrollDistance = 8000; 
-        
-        const stickyPoint = header.offsetTop - 40;
+  const burger = document.querySelector(".burger");
+  const nav = document.querySelector("nav ul");
+  if (!burger || !nav) return;
 
-        const lerpColor = (colorA, colorB, amount) => {
-            const r = Math.round(colorA[0] + (colorB[0] - colorA[0]) * amount);
-            const g = Math.round(colorA[1] + (colorB[1] - colorA[1]) * amount);
-            const b = Math.round(colorA[2] + (colorB[2] - colorA[2]) * amount);
-            return `rgb(${r}, ${g}, ${b})`;
-        };
+  // створюємо мобільне меню
+  let mobileMenu = document.createElement("div");
+  mobileMenu.classList.add("mobile-menu");
+  mobileMenu.innerHTML = nav.innerHTML;
+  document.querySelector("header").appendChild(mobileMenu);
 
-        const handle_scroll = () => {
-            const scrollY = window.scrollY;
-            if (scrollY > stickyPoint) {
-                header.classList.add('header--scrolled');
-            } else {
-                header.classList.remove('header--scrolled');
-            }
-            const progress = Math.min(scrollY / scrollDistance, 1);
-            const newColor = lerpColor(colorStart, colorEnd, progress);
-            header.style.backgroundColor = newColor;
-        };        
-        window.addEventListener('scroll', handle_scroll);
-    }    
+  burger.addEventListener("click", () => {
+    mobileMenu.classList.toggle("active");
+  });
+
+  // закриваємо при кліку на посилання
+  mobileMenu.querySelectorAll("a").forEach(a => {
+    a.addEventListener("click", () => mobileMenu.classList.remove("active"));
+  });
+
+  // закриття при кліку поза меню
+  document.addEventListener("click", (e) => {
+    if (!mobileMenu.contains(e.target) && !burger.contains(e.target)) {
+      mobileMenu.classList.remove("active");
+    }
+  });
 });
